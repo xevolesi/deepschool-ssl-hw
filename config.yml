@@ -1,0 +1,3 @@
+dataset:
+  image_folder: dataset/clothing_dataset
+  csv_path: dataset/clothing_dataset/images.csv

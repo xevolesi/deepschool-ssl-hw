@@ -1,0 +1,5 @@
+addict==2.4.0
+PyYAML==6.0.1
+opencv-contrib-python==4.9.0.80
+jpeg4py==0.1.4
+pandas==2.2.0
