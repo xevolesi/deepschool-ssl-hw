@@ -1,3 +1,61 @@
 dataset:
   image_folder: dataset/clothing_dataset
   csv_path: dataset/clothing_dataset/images.csv
+  label_mapping:
+    Blazer: 0
+    Blouse: 1
+    Body: 2
+    Dress: 3
+    Hat: 4
+    Hoodie: 5
+    Longsleeve: 6
+    Not sure: 7
+    Other: 8
+    Outwear: 9
+    Pants: 10
+    Polo: 11
+    Shirt: 12
+    Shoes: 13
+    Shorts: 14
+    Skip: 15
+    Skirt: 16
+    T-Shirt: 17
+    Top: 18
+    Undershirt: 19
+
+training:
+  use_image_caching: true
+
+augmentations:
+  train:
+    transform:
+      __class_fullname__: Compose
+      transforms:
+        - __class_fullname__: albumentations.augmentations.crops.transforms.RandomResizedCrop
+          height: 224
+          width: 224
+          scale:
+            - 0.2
+            - 1.0
+          always_apply: true
+        - __class_fullname__: albumentations.augmentations.transforms.ColorJitter
+          brightness: 0.4
+          contrast: 0.4
+          saturation: 0.4
+          hue: 0.1
+          p: 0.8
+        - __class_fullname__: albumentations.augmentations.transforms.ToGray
+          p: 0.2
+        - __class_fullname__: albumentations.augmentations.transforms.GaussianBlur
+          sigma_limit:
+            - 0.1
+            - 2.0
+          p: 0.5
+        - __class_fullname__: albumentations.augmentations.geometric.transforms.HorizontalFlip
+          p: 0.5
+
+        # To PyTorch tensors.
+        - __class_fullname__: albumentations.augmentations.transforms.Normalize
+          always_apply: true
+        - __class_fullname__: albumentations.pytorch.transforms.ToTensorV2
+          always_apply: true

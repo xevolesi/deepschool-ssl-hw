@@ -1,4 +1,5 @@
 import addict
+import pandas as pd
 import pytest
 
 from source.utils.general import read_config
@@ -15,3 +16,8 @@ def get_test_config(get_test_config_path: str) -> addict.Dict:
     config.dataset.image_folder = "test_data/images"
     config.dataset.csv_path = "test_data/test.csv"
     return config
+
+
+@pytest.fixture(scope="module")
+def get_test_csv(get_test_config) -> pd.DataFrame:
+    return pd.read_csv(get_test_config.dataset.csv_path)
