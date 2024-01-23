@@ -71,6 +71,12 @@ def test_dataset(
             __assert_torch_datapoint(item)
 
 
+def __assert_view(view: torch.Tensor, batch_size) -> None:
+    assert view.shape == (batch_size, 3, 224, 224)
+    assert isinstance(view, torch.Tensor)
+    assert view.dtype == torch.float32
+
+
 @pytest.mark.parametrize("use_cache", [True, False])
 def test_build_dataloaders(use_cache: bool, get_test_config: addict.Dict, get_test_csv: pd.DataFrame) -> None:
     get_test_config.training.use_image_caching = use_cache
@@ -82,8 +88,5 @@ def test_build_dataloaders(use_cache: bool, get_test_config: addict.Dict, get_te
             assert len(images) == get_test_config.training.batch_size
             assert all(isinstance(image, np.ndarray) for image in images)
             assert all(image.dtype == np.uint8 for image in images)
-
-            view1 = batch["view1"]
-            assert view1.shape == (get_test_config.training.batch_size, 3, 224, 224)
-            assert isinstance(view1, torch.Tensor)
-            assert view1.dtype == torch.float32
+            __assert_view(batch["view1"], get_test_config.training.batch_size)
+            __assert_view(batch["view2"], get_test_config.training.batch_size)
