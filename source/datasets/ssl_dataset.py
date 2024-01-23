@@ -2,11 +2,13 @@ import pathlib
 
 import addict
 import pandas as pd
-from torch.utils.data import Dataset
+import torch
+from torch.utils.data import DataLoader, Dataset
 
+from source.utils.augmentations import get_albumentation_augs
 from source.utils.custom_types import DataPoint
 
-from .utils import read_image
+from .utils import fix_worker_seeds, read_image, ssl_collate_fn, train_val_test_split
 
 
 class SSLDataset(Dataset):
@@ -41,3 +43,20 @@ class SSLDataset(Dataset):
             data_point["view1"] = self.transforms(image=image)["image"]
             data_point["view2"] = self.transforms(image=image)["image"]
         return data_point
+
+
+def build_dataloaders(dataframe: pd.DataFrame, config: addict.Dict) -> dict[str, DataLoader]:
+    split = train_val_test_split(dataframe, config)
+    transforms = get_albumentation_augs(config)
+    dataloaders = {}
+    for subset_name in split:
+        dataloaders[subset_name] = DataLoader(
+            SSLDataset(config, split[subset_name], transforms[subset_name]),
+            config.training.batch_size,
+            shuffle=subset_name == "train",
+            pin_memory=torch.cuda.is_available(),
+            num_workers=config.training.dataloader_num_workers,
+            collate_fn=ssl_collate_fn,
+            worker_init_fn=fix_worker_seeds,
+        )
+    return dataloaders

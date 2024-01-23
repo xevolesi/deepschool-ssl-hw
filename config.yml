@@ -24,7 +24,18 @@ dataset:
     Undershirt: 19
 
 training:
+  folds:
+    train:
+      - 0
+      - 1
+      - 2
+    val:
+      - 3
+    test:
+      - 4
   use_image_caching: true
+  batch_size: 64
+  dataloader_num_workers: 6
 
 augmentations:
   train:
@@ -54,6 +65,30 @@ augmentations:
         - __class_fullname__: albumentations.augmentations.geometric.transforms.HorizontalFlip
           p: 0.5
 
+        # To PyTorch tensors.
+        - __class_fullname__: albumentations.augmentations.transforms.Normalize
+          always_apply: true
+        - __class_fullname__: albumentations.pytorch.transforms.ToTensorV2
+          always_apply: true
+  val:
+    transform:
+      __class_fullname__: Compose
+      transforms:
+        - __class_fullname__: albumentations.augmentations.geometric.resize.Resize
+          height: 224
+          width: 224
+        # To PyTorch tensors.
+        - __class_fullname__: albumentations.augmentations.transforms.Normalize
+          always_apply: true
+        - __class_fullname__: albumentations.pytorch.transforms.ToTensorV2
+          always_apply: true
+  test:
+    transform:
+      __class_fullname__: Compose
+      transforms:
+        - __class_fullname__: albumentations.augmentations.geometric.resize.Resize
+          height: 224
+          width: 224
         # To PyTorch tensors.
         - __class_fullname__: albumentations.augmentations.transforms.Normalize
           always_apply: true
