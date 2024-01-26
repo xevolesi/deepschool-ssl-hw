@@ -35,25 +35,33 @@ def __assert_numpy_datapoint(data_point: DataPoint) -> None:
     assert isinstance(data_point["label"], int)
 
 
-def __assert_torch_datapoint(data_point: DataPoint) -> None:
-    for view_name in ("view1", "view2"):
-        assert isinstance(data_point[view_name], torch.Tensor)
-        assert data_point[view_name].dtype == torch.float32
-        assert data_point[view_name].shape == (3, 224, 224)
+def __assert_torch_datapoint(data_point: DataPoint, subset: str) -> None:
+    def assert_torch_tensor(torch_tensor: torch.Tensor) -> None:
+        assert isinstance(torch_tensor, torch.Tensor)
+        assert torch_tensor.dtype == torch.float32
+        assert torch_tensor.shape == (3, 224, 224)
+
+    assert_torch_tensor(data_point["view1"])
+    if subset == "train":
+        assert_torch_tensor(data_point["view2"])
+    else:
+        assert data_point["view2"] is None
     assert isinstance(data_point["image"], np.ndarray)
     assert data_point["image"].dtype == np.uint8
     assert isinstance(data_point["label"], int)
 
 
-@pytest.mark.parametrize(("use_cache", "use_transforms"), product((True, False), (True, False)))
+@pytest.mark.parametrize(
+    ("use_cache", "use_transforms", "subset"), product((True, False), (True, False), ("train", "val", "test"))
+)
 def test_dataset(
-    use_cache: bool, use_transforms: bool, get_test_config: addict.Dict, get_test_csv: pd.DataFrame
+    use_cache: bool, use_transforms: bool, subset: str, get_test_config: addict.Dict, get_test_csv: pd.DataFrame
 ) -> None:
     get_test_config.training.use_image_caching = use_cache
     transforms = None
     if use_transforms:
-        transforms = get_albumentation_augs(get_test_config)["train"]
-    dataset = SSLDataset(get_test_config, get_test_csv, transforms)
+        transforms = get_albumentation_augs(get_test_config)[subset]
+    dataset = SSLDataset(get_test_config, get_test_csv, subset, transforms)
     assert len(dataset) == len(get_test_csv)
 
     # Quite bad practice to access protected method from outside
@@ -68,7 +76,7 @@ def test_dataset(
         if not use_transforms:
             __assert_numpy_datapoint(item)
         else:
-            __assert_torch_datapoint(item)
+            __assert_torch_datapoint(item, subset)
 
 
 def __assert_view(view: torch.Tensor, batch_size) -> None:
@@ -82,11 +90,14 @@ def test_build_dataloaders(use_cache: bool, get_test_config: addict.Dict, get_te
     get_test_config.training.use_image_caching = use_cache
     dataloaders = build_dataloaders(get_test_csv, get_test_config)
 
-    for subset_loader in dataloaders.values():
+    for subset_name, subset_loader in dataloaders.items():
         for batch in subset_loader:
             images = batch["image"]
             assert len(images) == get_test_config.training.batch_size
             assert all(isinstance(image, np.ndarray) for image in images)
             assert all(image.dtype == np.uint8 for image in images)
             __assert_view(batch["view1"], get_test_config.training.batch_size)
-            __assert_view(batch["view2"], get_test_config.training.batch_size)
+            if subset_name == "train":
+                __assert_view(batch["view2"], get_test_config.training.batch_size)
+            else:
+                assert batch["view2"] is None

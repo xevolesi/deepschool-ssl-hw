@@ -29,10 +29,14 @@ def train_val_test_split(dataframe: pd.DataFrame, config: addict.Dict) -> dict[s
     }
 
 
-def ssl_collate_fn(batch: list[DataPoint]) -> dict[str, ImageDataPoint | torch.Tensor]:
-    # We don't want to apply default collate to source images.
+def ssl_collate_fn(batch: list[DataPoint], subset: str = "train") -> dict[str, ImageDataPoint | torch.Tensor | None]:
     images = [item["image"] for item in batch]
-    collated_data = default_collate([item | {"image": 0} for item in batch])
+    to_collate = [item | {"image": 0} for item in batch]
+    if subset != "train":
+        to_collate = [item | {"image": 0} | {"view2": 0} for item in batch]
+    collated_data = default_collate(to_collate)
+    if subset != "train":
+        collated_data |= {"view2": None}
     return collated_data | {"image": images}
 
 

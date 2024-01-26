@@ -1,8 +1,11 @@
 import pathlib
+from functools import partial
 
 import addict
 import pandas as pd
 import torch
+from albumentations import Compose
+from albumentations.core.serialization import Serializable
 from torch.utils.data import DataLoader, Dataset
 
 from source.utils.augmentations import get_albumentation_augs
@@ -12,7 +15,14 @@ from .utils import fix_worker_seeds, read_image, ssl_collate_fn, train_val_test_
 
 
 class SSLDataset(Dataset):
-    def __init__(self, config: addict.Dict, dataframe: pd.DataFrame, transforms=None) -> None:
+    def __init__(
+        self,
+        config: addict.Dict,
+        dataframe: pd.DataFrame,
+        subset: str = "train",
+        transforms: Compose | Serializable | None = None,
+    ) -> None:
+        self.__subset = subset
         self.__image_dir = config.dataset.image_folder
         self.__label_mapper = config.dataset.label_mapping
         self.__labels = dataframe["label"].map(self.__label_mapper).to_numpy()
@@ -41,7 +51,8 @@ class SSLDataset(Dataset):
         data_point = {"view1": None, "view2": None, "image": image, "label": label}
         if self.transforms is not None:
             data_point["view1"] = self.transforms(image=image)["image"]
-            data_point["view2"] = self.transforms(image=image)["image"]
+            if self.__subset == "train":
+                data_point["view2"] = self.transforms(image=image)["image"]
         return data_point
 
 
@@ -51,12 +62,12 @@ def build_dataloaders(dataframe: pd.DataFrame, config: addict.Dict) -> dict[str,
     dataloaders = {}
     for subset_name in split:
         dataloaders[subset_name] = DataLoader(
-            SSLDataset(config, split[subset_name], transforms[subset_name]),
+            SSLDataset(config, split[subset_name], subset_name, transforms[subset_name]),
             config.training.batch_size,
             shuffle=subset_name == "train",
             pin_memory=torch.cuda.is_available(),
             num_workers=config.training.dataloader_num_workers,
-            collate_fn=ssl_collate_fn,
+            collate_fn=partial(ssl_collate_fn, subset=subset_name),
             worker_init_fn=fix_worker_seeds,
         )
     return dataloaders
