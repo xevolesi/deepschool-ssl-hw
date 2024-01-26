@@ -101,3 +101,13 @@ def test_build_dataloaders(use_cache: bool, get_test_config: addict.Dict, get_te
                 __assert_view(batch["view2"], get_test_config.training.batch_size)
             else:
                 assert batch["view2"] is None
+
+
+def test_switch_transforms(get_test_config: addict.Dict, get_test_csv: pd.DataFrame) -> None:
+    transforms = get_albumentation_augs(get_test_config)
+    dataset = SSLDataset(get_test_config, get_test_csv, "val", transforms["val"])
+
+    for transform_set in transforms:
+        dataset.switch_transforms(transforms[transform_set])
+        for transform_one, transform_other in zip(dataset.transforms, transforms[transform_set]):
+            assert transform_one == transform_other

@@ -55,6 +55,9 @@ class SSLDataset(Dataset):
                 data_point["view2"] = self.transforms(image=image)["image"]
         return data_point
 
+    def switch_transforms(self, transforms: Compose | Serializable | None) -> None:
+        self.transforms = transforms
+
 
 def build_dataloaders(dataframe: pd.DataFrame, config: addict.Dict) -> dict[str, DataLoader]:
     split = train_val_test_split(dataframe, config)
