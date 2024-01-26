@@ -17,6 +17,6 @@ format:
 	ruff check . --fix
 
 run_tests: 
-	IS_LOCAL_RUN=1 pytest -svvv ${TEST_DIR}
+	IS_LOCAL_RUN=1 ENABLE_TESTS_ON_GPU=1 pytest -svvv ${TEST_DIR}
 
 pre_push_test: lint run_tests

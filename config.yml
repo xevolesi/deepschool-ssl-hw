@@ -37,6 +37,13 @@ training:
   batch_size: 64
   dataloader_num_workers: 6
 
+model:
+  __class_fullname__: source.models.TimmSimSiam
+  backbone_name: resnet50d
+  timm_pretrained: false
+  feature_dim: 2048
+  predictor_dim: 512
+
 augmentations:
   train:
     transform:
