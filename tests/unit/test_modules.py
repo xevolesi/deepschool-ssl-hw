@@ -16,11 +16,11 @@ def __assert_mlp(mlp_cls: torch.nn.Module, mlp_kwargs, test_settings: tuple[bool
     if not is_local_run:
         pytest.skip("Skipping modules test for CI")
     mlp = mlp_cls(**mlp_kwargs)
-    random_tensor = torch.randn((2, mlp_kwargs["in_channels"]), dtype=torch.float32).cpu()
+    random_tensor = torch.randn((2, mlp_kwargs["in_features"]), dtype=torch.float32).cpu()
     mlp.eval()
     with torch.no_grad():
         output = mlp(random_tensor)
-        __assert_out_tensor(output, (2, mlp_kwargs["out_channels"]))
+        __assert_out_tensor(output, (2, mlp_kwargs["out_features"]))
 
     if enable_tests_on_gpu:
         mlp.train()
@@ -28,11 +28,11 @@ def __assert_mlp(mlp_cls: torch.nn.Module, mlp_kwargs, test_settings: tuple[bool
         random_tensor = random_tensor.cuda()
         with torch.no_grad():
             output = mlp(random_tensor)
-            __assert_out_tensor(output, (2, mlp_kwargs["out_channels"]))
+            __assert_out_tensor(output, (2, mlp_kwargs["out_features"]))
 
         random_tensor.requires_grad = True
         output = mlp(random_tensor)
-        __assert_out_tensor(output, (2, mlp_kwargs["out_channels"]))
+        __assert_out_tensor(output, (2, mlp_kwargs["out_features"]))
 
         # Assert gradients.
         dummy_loss = (1 - output).mean()
@@ -42,19 +42,19 @@ def __assert_mlp(mlp_cls: torch.nn.Module, mlp_kwargs, test_settings: tuple[bool
             assert param.grad is not None
 
 
-@pytest.mark.parametrize(("in_channels", "out_channels"), product([128, 256, 512], [128, 256, 512]))
-def test_projector(in_channels: int, out_channels: int, get_test_extended_settings: tuple[bool, bool]) -> None:
-    __assert_mlp(Projector, {"in_channels": in_channels, "out_channels": out_channels}, get_test_extended_settings)
+@pytest.mark.parametrize(("in_features", "out_features"), product([128, 256, 512], [128, 256, 512]))
+def test_projector(in_features: int, out_features: int, get_test_extended_settings: tuple[bool, bool]) -> None:
+    __assert_mlp(Projector, {"in_features": in_features, "out_features": out_features}, get_test_extended_settings)
 
 
 @pytest.mark.parametrize(
-    ("in_channels", "prediction_channels", "out_channels"), product([128, 256, 512], [128, 256, 512], [128, 256, 512])
+    ("in_features", "predictor_features", "out_features"), product([128, 256, 512], [128, 256, 512], [128, 256, 512])
 )
 def test_predictor(
-    in_channels: int, prediction_channels: int, out_channels: int, get_test_extended_settings: tuple[bool, bool]
+    in_features: int, predictor_features: int, out_features: int, get_test_extended_settings: tuple[bool, bool]
 ) -> None:
     __assert_mlp(
         Predictor,
-        {"in_channels": in_channels, "prediction_channels": prediction_channels, "out_channels": out_channels},
+        {"in_features": in_features, "predictor_features": predictor_features, "out_features": out_features},
         get_test_extended_settings,
     )

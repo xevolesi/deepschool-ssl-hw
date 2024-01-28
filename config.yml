@@ -1,6 +1,6 @@
 dataset:
-  image_folder: dataset/clothing_dataset
-  csv_path: dataset/clothing_dataset/images.csv
+  image_folder: dataset/clothing-dataset/images
+  csv_path: dataset/clothing-dataset/images.csv
   label_mapping:
     Blazer: 0
     Blouse: 1
@@ -33,16 +33,28 @@ training:
       - 3
     test:
       - 4
+  device: cuda:0
+  epochs: 1000
   use_image_caching: true
-  batch_size: 64
+  batch_size: 96
   dataloader_num_workers: 6
 
 model:
   __class_fullname__: source.models.TimmSimSiam
   backbone_name: resnet50d
   timm_pretrained: false
-  feature_dim: 2048
-  predictor_dim: 512
+  projection_dim: 2048
+  prediction_dim: 512
+
+criterion:
+  __class_fullname__: torch.nn.CosineSimilarity
+  dim: 1
+
+optimizer:
+  __class_fullname__: torch.optim.SGD
+  lr: 0.5
+  weight_decay: 0.0001
+  momentum: 0.9
 
 augmentations:
   train:

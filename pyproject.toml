@@ -34,6 +34,7 @@ ignore = [
     "ISC001",
     "NPY002",
     "S311",
+    "RUF003",
 ]
 select = [
     "E",

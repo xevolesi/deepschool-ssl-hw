@@ -30,20 +30,25 @@ def test_timm_simsiam(backbone_name, get_test_config, get_test_csv, get_test_ext
     config = deepcopy(get_test_config)
     model = get_object_from_dict(config.model)
     random_batch = torch.randn(config.training.batch_size, 3, 224, 224)
+    criterion = get_object_from_dict(config.criterion)
 
     model.eval()
 
     with torch.no_grad():
         # Check actual representation (tensor after avg. pooling).
         representation = model.get_representations(random_batch)
-        assert representation.shape == (config.training.batch_size, model.embedding_dim)
+        assert representation.shape == (config.training.batch_size, model.representation_dim)
+
+        # Check embedding shape.
+        embedding = model.get_projections(random_batch)
+        assert embedding.shape == (config.training.batch_size, model.projection_dim)
 
         # Check full forward pass.
         out_dict = model(random_batch, random_batch)
-        assert out_dict["view1_predictions"].shape == (config.training.batch_size, model.feature_dim)
-        assert out_dict["view2_predictions"].shape == (config.training.batch_size, model.feature_dim)
-        assert out_dict["view1_embeddings"].shape == (config.training.batch_size, model.feature_dim)
-        assert out_dict["view2_embeddings"].shape == (config.training.batch_size, model.feature_dim)
+        assert out_dict["view1_predictions"].shape == (config.training.batch_size, model.projection_dim)
+        assert out_dict["view2_predictions"].shape == (config.training.batch_size, model.projection_dim)
+        assert out_dict["view1_embeddings"].shape == (config.training.batch_size, model.projection_dim)
+        assert out_dict["view2_embeddings"].shape == (config.training.batch_size, model.projection_dim)
 
     if enable_tests_on_gpu:
         random_batch = random_batch.cuda()
@@ -60,9 +65,10 @@ def test_timm_simsiam(backbone_name, get_test_config, get_test_csv, get_test_ext
         assert not out_dict["view2_embeddings"].requires_grad
 
         # Let's calculate dumb loss.
-        loss1 = -(out_dict["view1_predictions"] * out_dict["view1_embeddings"]).sum(dim=1).mean()
-        loss2 = -(out_dict["view2_predictions"] * out_dict["view2_embeddings"]).sum(dim=1).mean()
-        loss = 0.5 * (loss1 + loss2)
+        loss = -0.5 * (
+            criterion(out_dict["view1_predictions"], out_dict["view2_embeddings"]).mean()
+            + criterion(out_dict["view2_predictions"], out_dict["view1_embeddings"]).mean()
+        )
         loss.backward()
 
         for param in model.parameters():

@@ -2,29 +2,33 @@ from torch import nn
 
 
 class Projector(nn.Sequential):
-    def __init__(self, in_channels: int, out_channels: int) -> None:
-        self.in_channels: int = in_channels
-        self.out_channels: int = out_channels
+    """Описание смотрите в статье на странице 3 в Projection MLP."""
+
+    def __init__(self, in_features: int, out_features: int) -> None:
+        self.in_features: int = in_features
+        self.out_features: int = out_features
         super().__init__(
-            nn.Linear(in_channels, in_channels, bias=False),
-            nn.BatchNorm1d(in_channels),
+            nn.Linear(in_features, in_features, bias=False),
+            nn.BatchNorm1d(in_features),
             nn.ReLU(inplace=True),
-            nn.Linear(in_channels, in_channels, bias=False),
-            nn.BatchNorm1d(in_channels),
+            nn.Linear(in_features, in_features, bias=False),
+            nn.BatchNorm1d(in_features),
             nn.ReLU(inplace=True),
-            nn.Linear(in_channels, out_channels, bias=False),
-            nn.BatchNorm1d(out_channels, affine=False),
+            nn.Linear(in_features, out_features, bias=False),
+            nn.BatchNorm1d(out_features, affine=False),
         )
 
 
 class Predictor(nn.Sequential):
-    def __init__(self, in_channels: int, prediction_channels: int, out_channels: int) -> None:
-        self.in_channels: int = in_channels
-        self.prediction_channels: int = prediction_channels
-        self.out_channels: int = out_channels
+    """Описание смотрите в статье на странице 3 в Prediction MLP."""
+
+    def __init__(self, in_features: int, predictor_features: int, out_features: int) -> None:
+        self.in_features: int = in_features
+        self.out_features: int = out_features
+        self.predictor_features: int = predictor_features
         super().__init__(
-            nn.Linear(in_channels, prediction_channels, bias=False),
-            nn.BatchNorm1d(prediction_channels),
+            nn.Linear(in_features, predictor_features, bias=False),
+            nn.BatchNorm1d(predictor_features),
             nn.ReLU(inplace=True),
-            nn.Linear(prediction_channels, out_channels),
+            nn.Linear(predictor_features, out_features),
         )
