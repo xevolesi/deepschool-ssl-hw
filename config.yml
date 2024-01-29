@@ -47,7 +47,7 @@ model:
   prediction_dim: 512
 
 criterion:
-  __class_fullname__: torch.nn.CosineSimilarity
+  __class_fullname__: source.losses.NegativeCosineSimilarity
   dim: 1
 
 optimizer:
