@@ -3,7 +3,6 @@ import torch
 from torch import nn
 
 from source.modules.mlps import Predictor, Projector
-from source.utils.custom_types import SimSiamOutput
 
 
 class TimmSimSiam(nn.Module):
@@ -43,14 +42,7 @@ class TimmSimSiam(nn.Module):
     def get_predictions(self, tensor: torch.Tensor) -> torch.Tensor:
         return self.predictor(self.projector(self.backbone(tensor)))
 
-    def forward(self, view1: torch.Tensor, view2: torch.Tensor) -> SimSiamOutput:
-        embedding1 = self.projector(self.backbone(view1))
-        embedding2 = self.projector(self.backbone(view2))
-        prediction1 = self.predictor(embedding1)
-        prediction2 = self.predictor(embedding2)
-        return {
-            "view1_predictions": prediction1,
-            "view2_predictions": prediction2,
-            "view1_embeddings": embedding1.detach(),
-            "view2_embeddings": embedding2.detach(),
-        }
+    def forward(self, tensor: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        embeddings = self.get_projections(tensor)
+        predictions = self.predictor(embeddings)
+        return embeddings.detach(), predictions

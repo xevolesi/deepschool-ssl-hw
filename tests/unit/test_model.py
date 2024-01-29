@@ -44,31 +44,24 @@ def test_timm_simsiam(backbone_name, get_test_config, get_test_csv, get_test_ext
         assert embedding.shape == (config.training.batch_size, model.projection_dim)
 
         # Check full forward pass.
-        out_dict = model(random_batch, random_batch)
-        assert out_dict["view1_predictions"].shape == (config.training.batch_size, model.projection_dim)
-        assert out_dict["view2_predictions"].shape == (config.training.batch_size, model.projection_dim)
-        assert out_dict["view1_embeddings"].shape == (config.training.batch_size, model.projection_dim)
-        assert out_dict["view2_embeddings"].shape == (config.training.batch_size, model.projection_dim)
+        embeddings, predictions = model(random_batch)
+        assert embeddings.shape == (config.training.batch_size, model.projection_dim)
+        assert predictions.shape == (config.training.batch_size, model.projection_dim)
 
     if enable_tests_on_gpu:
         random_batch = random_batch.cuda()
         model = model.cuda()
         random_batch.requires_grad = True
-        out_dict = model(random_batch, random_batch)
+        embeddings, predictions = model(random_batch)
 
         for param in model.parameters():
             assert param.grad is None
 
-        assert out_dict["view1_predictions"].requires_grad
-        assert out_dict["view2_predictions"].requires_grad
-        assert not out_dict["view1_embeddings"].requires_grad
-        assert not out_dict["view2_embeddings"].requires_grad
+        assert predictions.requires_grad
+        assert not embeddings.requires_grad
 
         # Let's calculate dumb loss.
-        loss = -0.5 * (
-            criterion(out_dict["view1_predictions"], out_dict["view2_embeddings"]).mean()
-            + criterion(out_dict["view2_predictions"], out_dict["view1_embeddings"]).mean()
-        )
+        loss = criterion(embeddings, embeddings, predictions, predictions)
         loss.backward()
 
         for param in model.parameters():
