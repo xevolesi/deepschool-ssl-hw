@@ -3,6 +3,7 @@ import torch
 from torch import nn
 
 from source.modules.mlps import Predictor, Projector
+from source.utils.general import get_cpu_state_dict
 
 
 class TimmSimSiam(nn.Module):
@@ -18,7 +19,9 @@ class TimmSimSiam(nn.Module):
         # Здесь (https://huggingface.co/docs/timm/feature_extraction)
         # можно почитать подробнее про то, как пользоваться моделями
         # из `timm` в качестве экстракторов признаков.
-        self.backbone = timm.create_model(backbone_name, pretrained=timm_pretrained, exportable=True, num_classes=0)
+        self.backbone: nn.Module = timm.create_model(
+            backbone_name, pretrained=timm_pretrained, exportable=True, num_classes=0
+        )
 
         # Это - размерность вектора-признака после глобального пулинга.
         # В лекции мы договорились называть этот вектор - вектором
@@ -46,3 +49,6 @@ class TimmSimSiam(nn.Module):
         embeddings = self.get_projections(tensor)
         predictions = self.predictor(embeddings)
         return embeddings.detach(), predictions
+
+    def get_backbone_state_dict(self) -> dict[str, torch.Tensor]:
+        return get_cpu_state_dict(self.backbone)

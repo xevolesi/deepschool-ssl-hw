@@ -5,6 +5,7 @@ import types
 import typing as ty
 
 import addict
+import torch
 import yaml
 
 
@@ -59,3 +60,7 @@ def get_object_from_dict(dict_repr: dict, parent: dict | None = None, **addition
                 args.append(config_value)
             del dict_repr[param_name]
     return callable_(*args, **dict_repr)
+
+
+def get_cpu_state_dict(model: torch.nn.Module) -> dict[str, torch.Tensor]:
+    return {name: tensor.detach().cpu() for name, tensor in model.state_dict().items()}

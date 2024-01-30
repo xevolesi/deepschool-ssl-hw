@@ -56,6 +56,9 @@ optimizer:
   weight_decay: 0.0001
   momentum: 0.9
 
+scheduler:
+  __class_fullname__: torch.optim.lr_scheduler.CosineAnnealingLR
+
 augmentations:
   train:
     transform:
