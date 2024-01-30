@@ -1,10 +1,16 @@
 import sys
+import typing as ty
 
 import addict
 import pandas as pd
 import torch
 from loguru import logger
 from torch.utils.data import DataLoader
+
+try:
+    from wandb.wandb_run import Run
+except ImportError:
+    Run = ty.Any
 
 from source.datasets.ssl_dataset import build_dataloaders
 from source.losses import NegativeCosineSimilarity
@@ -25,7 +31,7 @@ logger.add(
 )
 
 
-def train(dataframe: pd.DataFrame, config: addict.Dict) -> None:
+def train(dataframe: pd.DataFrame, config: addict.Dict, wb_run: Run | None) -> None:
     augs = get_albumentation_augs(config)
     device = torch.device(config.training.device)
     dataloaders = build_dataloaders(dataframe, config)
@@ -66,6 +72,16 @@ def train(dataframe: pd.DataFrame, config: addict.Dict) -> None:
             tl=training_loss,
             knn_acc=val_accuracy,
         )
+
+        if wb_run is not None:
+            wb_run.log(
+                {
+                    "training_loss": training_loss,
+                    "knn_acc": val_accuracy,
+                    "epoch": epoch,
+                    "LR": scheduler.get_last_lr()[0],
+                }
+            )
         if val_accuracy >= best_knn_acc:
             best_knn_acc = val_accuracy
             best_weights = model.get_backbone_state_dict()
