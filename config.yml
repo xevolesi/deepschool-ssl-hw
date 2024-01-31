@@ -35,7 +35,7 @@ training:
       - 4
   use_wandb: true
   device: cuda:0
-  epochs: 10
+  epochs: 1000
   use_image_caching: true
   batch_size: 96
   dataloader_num_workers: 6
