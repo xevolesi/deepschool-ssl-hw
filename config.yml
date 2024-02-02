@@ -23,6 +23,9 @@ dataset:
     Top: 18
     Undershirt: 19
 
+logs:
+  checkpoint_folder: checkpoints
+
 training:
   folds:
     train:
@@ -33,12 +36,13 @@ training:
       - 3
     test:
       - 4
-  use_wandb: true
+  use_wandb: false
   device: cuda:0
-  epochs: 1000
+  epochs: 1
   use_image_caching: true
   batch_size: 96
   dataloader_num_workers: 6
+  
 
 model:
   __class_fullname__: source.models.TimmSimSiam

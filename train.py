@@ -5,8 +5,9 @@ import pandas as pd
 import torch
 
 try:
-    import wandb
     from dotenv import load_dotenv
+
+    import wandb
 except ImportError:
     load_dotenv = None
     wandb = None

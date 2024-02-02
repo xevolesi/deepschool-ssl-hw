@@ -1,8 +1,11 @@
+import pathlib
 import sys
 import typing as ty
+from datetime import datetime
 
 import addict
 import pandas as pd
+import pytz
 import torch
 from loguru import logger
 from torch.utils.data import DataLoader
@@ -86,6 +89,14 @@ def train(dataframe: pd.DataFrame, config: addict.Dict, wb_run: Run | None) -> N
             best_knn_acc = val_accuracy
             best_weights = model.get_backbone_state_dict()
     logger.info("Best result with KNN Acc@1={knn_acc:.3f} on validation set", knn_acc=best_knn_acc)
+
+    # Decide artifact path.
+    run_id = datetime.now(tz=pytz.utc).strftime("%m-%d-%Y-%H-%M-%S")
+    if wb_run is not None:
+        run_id = wb_run.id
+    checkpoint_path = pathlib.Path(config.logs.checkpoint_folder) / run_id
+    checkpoint_path.mkdir(exist_ok=True, parents=True)
+    torch.save(best_weights, checkpoint_path / f"best_checkpoint_{config.model.backbone_name}.pth")
 
     # Прогоним linear probing на тестовых данных.
     model.backbone.load_state_dict(best_weights)
