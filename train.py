@@ -5,14 +5,13 @@ import pandas as pd
 import torch
 
 try:
-    from dotenv import load_dotenv
-
     import wandb
+    from dotenv import load_dotenv
 except ImportError:
     load_dotenv = None
     wandb = None
 
-from source.utils.general import read_config
+from source.utils.general import read_config, seed_everything
 from source.utils.training import train
 
 # Set benchmark to True and deterministic to False
@@ -34,6 +33,7 @@ def main():
     if wandb is None or os.getenv("WANDB_API_KEY") is None:
         config.training.use_wandb = False
     run = wandb.init(project="SimSiam", config=config) if config.training.use_wandb else None
+    seed_everything(config)
     dataframe = pd.read_csv(config.dataset.csv_path)
     train(dataframe, config, run)
     if run is not None:

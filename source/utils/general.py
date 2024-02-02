@@ -1,10 +1,13 @@
 import inspect
+import os
 import pathlib
 import pydoc
+import random
 import types
 import typing as ty
 
 import addict
+import numpy as np
 import torch
 import yaml
 
@@ -64,3 +67,18 @@ def get_object_from_dict(dict_repr: dict, parent: dict | None = None, **addition
 
 def get_cpu_state_dict(model: torch.nn.Module) -> dict[str, torch.Tensor]:
     return {name: tensor.detach().cpu() for name, tensor in model.state_dict().items()}
+
+
+def seed_everything(config: addict.Dict, local_rank: int = 0) -> None:
+    """
+    Fix all avaliable seeds to ensure reproducibility.
+    Local rank is needed for distributed data parallel training.
+    It is used to make seeds different for different processes.
+    Each process will have `seed = config_seed + local_rank`.
+    """
+    random.SystemRandom().seed(config.training.seed + local_rank)
+    np.random.seed(config.training.seed + local_rank)
+    torch.manual_seed(config.training.seed + local_rank)
+    os.environ["PYTHONHASHSEED"] = str(config.training.seed + local_rank)
+    torch.cuda.manual_seed(config.training.seed + local_rank)
+    torch.cuda.manual_seed_all(config.training.seed + local_rank)
