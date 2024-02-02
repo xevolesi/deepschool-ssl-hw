@@ -19,4 +19,11 @@ format:
 run_tests: 
 	IS_LOCAL_RUN=1 ENABLE_TESTS_ON_GPU=1 pytest -svvv ${TEST_DIR}
 
+# OPEN ONLY AT THE CLOSE :D
+clear:
+	rm -rf checkpoints
+	rm -rf wandb
+	rm -rf .pytest_cache
+	rm -rf .ruff_cache
+
 pre_push_test: lint run_tests
