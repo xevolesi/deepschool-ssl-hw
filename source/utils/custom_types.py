@@ -12,10 +12,3 @@ class DataPoint(ty.TypedDict):
     view2: ImageDataPoint
     image: ImageDataPoint
     label: int
-
-
-class SimSiamOutput(ty.TypedDict):
-    view1_embeddings: torch.FloatTensor
-    view2_embeddings: torch.FloatTensor
-    view1_predictions: torch.FloatTensor
-    view2_predictions: torch.FloatTensor
