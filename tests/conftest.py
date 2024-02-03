@@ -19,6 +19,8 @@ def get_test_config(get_test_config_path: str) -> addict.Dict:
     config.dataset.csv_path = "test_data/test.csv"
 
     # Low batch size and 0 workers for CI.
+    config.training.device = "cpu"
+    config.training.epochs = 1
     config.training.batch_size = 4
     config.training.dataloader_num_workers = 0
 

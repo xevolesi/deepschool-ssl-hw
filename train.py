@@ -1,12 +1,15 @@
 import os
 import pathlib
+from datetime import datetime
 
 import pandas as pd
+import pytz
 import torch
 
 try:
-    import wandb
     from dotenv import load_dotenv
+
+    import wandb
 except ImportError:
     load_dotenv = None
     wandb = None
@@ -35,7 +38,13 @@ def main():
     run = wandb.init(project="SimSiam", config=config) if config.training.use_wandb else None
     seed_everything(config)
     dataframe = pd.read_csv(config.dataset.csv_path)
-    train(dataframe, config, run)
+
+    run_id = datetime.now(tz=pytz.utc).strftime("%m-%d-%Y-%H-%M-%S")
+    if run is not None:
+        run_id = run.id
+    base_log_dir = pathlib.Path(config.logs.checkpoint_folder) / run_id
+    base_log_dir.mkdir(exist_ok=True, parents=True)
+    train(dataframe, config, run, base_log_dir)
     if run is not None:
         run.finish()
 
