@@ -39,8 +39,8 @@
 
 # Как настроить `W&B`?
 1) Идем [сюда](https://wandb.ai/site), регистрируемся и входим в аккаунт;
-2) Тыкаем сюда ![wb-screen-1](assets/wb-screen-1.png);
-3) Листаем до `Danger zone` и кликаем по `Reveal` в менюшке `API keys` ![wb-screen-2](assets/wb-screen-2.png);
+2) Тыкаем сюда ![wb-screen-1](assets/wb-screen-1.png)
+3) Листаем до `Danger zone` и кликаем по `Reveal` в менюшке `API keys` ![wb-screen-2](assets/wb-screen-2.png)
 4) Копируем показанный `API key` и создаем файлик `.env` в корне репозитория. Пример можно посмотреть в файле `.dot-example`.
 
 Вроде все, `W&B` настроен!
@@ -74,4 +74,10 @@ pip install gdown
 ```bash
 mkdir checkpoints
 gdown https://drive.google.com/file/d/1diFKJykSutPdqOf6MQVj2G5qYivQRvo1/view?usp=sharing --fuzzy -O checkpoints/resnet50d-simsiam.pth
+```
+## Где взять такое же разбиение на `train-val-test`, как и у лектора?
+Возможно, вы захотите побить мои результаты. Для этого вам потребуется мое разбиение на выборки, чтобы можно было сравнивать ваши результаты с моими. Для того, чтобы иметь такое же разбиение на выборки, как и у меня, вам достаточно просто воспользоваться моим файликом `images.csv`, вместо исходного, скаченного вами вместе с датасетом. В моем файлике имеется колонка `fold`, содержащая в себе номера фолдов, по которым определяется сплит. Какие конкретно фолды куда летят, можно посмотреть в конфигурационном файле `predefined_configs/prepod_config.yml`.
+Для скачивания `images.csv` все также воспользуемся `gdown`, запустив загрузку следующей командой:
+```bash
+gdown https://drive.google.com/file/d/1lgR1RrP_D0QBzKcHjqe-512kTGIqZ0SN/view?usp=sharing --fuzzy .
 ```
